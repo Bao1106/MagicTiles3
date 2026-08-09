@@ -1,0 +1,51 @@
+﻿using UnityEngine;
+using Screen = UnityEngine.Device.Screen;
+
+public class InputController : MonoBehaviour
+{
+    [SerializeField] private NoteController noteController;
+    [Header("Demo")]
+    [Tooltip("Plays the chart automatically. Use it to verify sync without input, " +
+             "and to record a clean demo video.")]
+    [SerializeField] private bool autoplay;
+    
+    private void Update()
+    {
+        if (autoplay)
+        {
+            noteController.AutoHitDueNotes();
+            return;
+        }
+
+        
+        int touchCount = Input.touchCount;
+
+        if (touchCount > 0)
+        {
+            // Every began touch, not just the first: Magic Tiles is a two-thumb game and
+            // simultaneous taps on different lanes must all register.
+            for (int i = 0; i < touchCount; i++)
+            {
+                Touch touch = Input.GetTouch(i);
+                if (touch.phase == TouchPhase.Began)
+                    JudgeAtScreenX(touch.position.x);
+            }
+        }
+        else if (Input.GetMouseButtonDown(0))
+        {
+            // else, not a second if: on device Unity synthesises mouse events from touch,
+            // which would judge the same tap twice.
+            JudgeAtScreenX(Input.mousePosition.x);
+        }
+    }
+
+    private void JudgeAtScreenX(float screenX)
+    {
+        int laneCount = noteController.LaneCount;
+        int lane = Mathf.Clamp(
+            Mathf.FloorToInt(screenX / Screen.width * laneCount),
+            0, laneCount - 1);
+
+        noteController.TryJudgeLane(lane);
+    }
+}
