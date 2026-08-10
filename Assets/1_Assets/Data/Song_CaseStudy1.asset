@@ -16,7 +16,7 @@ MonoBehaviour:
   bpm: 128
   firstBeatOffset: 0.026
   leadInBeats: 4
-  subdivision: 2
-  noteCount: 365
-  approachTime: 1.2
+  subdivision: 1
+  noteCount: 183
+  approachTime: 1.5
   seed: 1337

@@ -11,7 +11,7 @@ public class GameController : MonoBehaviour
     [SerializeField] private InputController inputController;
 
     [Tooltip("Silence before the first sample, so tiles are already falling when music starts.")]
-    [SerializeField] private float leadInSeconds = 2f;
+    [SerializeField] private float leadInSeconds = 0.5f;
 
     private ScoreModel score;
     private GameState state;
@@ -50,6 +50,7 @@ public class GameController : MonoBehaviour
 
         if (result.Grade == Judgement.Miss)
         {
+            Debug.LogError("Miss Note");
             score.RegisterMiss();
             GameEvents.RaiseComboChanged(score.Combo);
             EndGame();

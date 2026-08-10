@@ -29,6 +29,10 @@ public class NoteController : MonoBehaviour
     [Tooltip("Outside Perfect but within this counts as Good. Beyond it the note is missed.")]
     [SerializeField] private float hitWindow = 0.12f;
 
+    [Tooltip("Optional visual for the hit line. NoteController positions it from hitLineViewportY " +
+             "so the graphic can never drift away from where judgement actually happens.")]
+    [SerializeField] private Transform hitLineVisual;
+    
     private readonly List<TileView> activeTiles = new List<TileView>(32);
     private float[] laneCenterX;
     private ObjectPool<TileView> pool;
@@ -47,7 +51,6 @@ public class NoteController : MonoBehaviour
     private int cachedScreenHeight;
 
     public int LaneCount => laneCount;
-    public float HitLineY => hitLineY;
 
     private void Awake()
     {
@@ -101,6 +104,12 @@ public class NoteController : MonoBehaviour
         cachedScreenHeight = Screen.height;
 
         if (approachTime > 0f) fallSpeed = (spawnY - hitLineY) / approachTime;
+        
+        if (hitLineVisual != null)
+        {
+            Vector3 p = hitLineVisual.position;
+            hitLineVisual.position = new Vector3(p.x, hitLineY, p.z);
+        }
     }
 
     /// <summary>
@@ -224,10 +233,6 @@ public class NoteController : MonoBehaviour
             GameEvents.RaiseEmptyTap(lane);
             return;
         }
-
-        TileView tile = activeTiles[bestIndex];
-        ref NoteData hitNote = ref notes[tile.NoteIndex];
-        hitNote.Judged = true;
 
         Judgement grade = bestAbsDelta <= perfectWindow ? Judgement.Perfect : Judgement.Good;
         Judge(bestIndex, grade, songPosition - notes[activeTiles[bestIndex].NoteIndex].TargetTime);

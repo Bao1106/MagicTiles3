@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Screen = UnityEngine.Device.Screen;
 
 public class InputController : MonoBehaviour
 {
@@ -16,7 +15,6 @@ public class InputController : MonoBehaviour
             noteController.AutoHitDueNotes();
             return;
         }
-
         
         int touchCount = Input.touchCount;
 
