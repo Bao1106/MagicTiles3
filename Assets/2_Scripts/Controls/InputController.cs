@@ -7,12 +7,16 @@ public class InputController : MonoBehaviour
     [Tooltip("Plays the chart automatically. Use it to verify sync without input, " +
              "and to record a clean demo video.")]
     [SerializeField] private bool autoplay;
-    
+
+    [Tooltip("Autoplay cycles Perfect / Good / Miss instead of hitting everything perfectly, " +
+             "so all three sets of feedback show up in one run. Turn off for a clean demo video.")]
+    [SerializeField] private bool cycleJudgements = true;
+
     private void Update()
     {
         if (autoplay)
         {
-            noteController.AutoHitDueNotes();
+            noteController.AutoHitDueNotes(cycleJudgements);
             return;
         }
         

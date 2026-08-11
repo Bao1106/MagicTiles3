@@ -34,6 +34,9 @@ public class NoteController : MonoBehaviour
     [SerializeField] private Transform hitLineVisual;
     
     private readonly List<TileView> activeTiles = new List<TileView>(32);
+    // Tiles that have been judged and are playing their exit animation. They are no longer
+    // moved, but must not return to the pool until the animation finishes.
+    private readonly List<TileView> exitingTiles = new List<TileView>(8);
     private float[] laneCenterX;
     private ObjectPool<TileView> pool;
 
@@ -147,6 +150,8 @@ public class NoteController : MonoBehaviour
 
     private void Update()
     {
+        ReleaseFinishedExits();
+        
         if (notes == null || !conductor.IsRunning) return;
 
         if (Screen.width != cachedScreenWidth || Screen.height != cachedScreenHeight)
@@ -166,6 +171,7 @@ public class NoteController : MonoBehaviour
                notes[nextSpawnIndex].TargetTime - songPosition <= approachTime)
         {
             TileView tile = pool.Get();
+            tile.ResetVisual();
             tile.NoteIndex = nextSpawnIndex;
             tile.SetSize(laneWidthWorld * 0.88f, tileHeight);
             tile.SetPosition(laneCenterX[notes[nextSpawnIndex].Lane], spawnY);
@@ -182,7 +188,7 @@ public class NoteController : MonoBehaviour
 
         var result = new HitResult(grade, note.Lane, tile.transform.position, deltaSeconds);
         GameEvents.RaiseNoteJudged(in result);
-        Despawn(activeIndex);
+        Despawn(activeIndex, grade);
     }
     
     private void MoveAndExpireTiles(float songPosition)
@@ -238,7 +244,11 @@ public class NoteController : MonoBehaviour
         Judge(bestIndex, grade, songPosition - notes[activeTiles[bestIndex].NoteIndex].TargetTime);
     }
 
-    public void AutoHitDueNotes()
+    /// <param name="cycleJudgements">
+    /// Taps late on every second note and skips every third, so one autoplay run shows the
+    /// Good and Miss feedback too — otherwise only the Perfect path is ever visible.
+    /// </param>
+    public void AutoHitDueNotes(bool cycleJudgements = false)
     {
         if (notes == null || !conductor.IsRunning) return;
 
@@ -247,24 +257,63 @@ public class NoteController : MonoBehaviour
         // Backwards: Judge() removes the entry at activeIndex.
         for (int i = activeTiles.Count - 1; i >= 0; i--)
         {
-            ref NoteData note = ref notes[activeTiles[i].NoteIndex];
-            if (note.Judged || songPosition < note.TargetTime) continue;
+            int noteIndex = activeTiles[i].NoteIndex;
+            ref NoteData note = ref notes[noteIndex];
+            if (note.Judged) continue;
 
-            Judge(i, Judgement.Perfect, songPosition - note.TargetTime);
+            float delay = 0f;
+            if (cycleJudgements)
+            {
+                // Chỉ xoay vòng Perfect ↔ Good (bỏ Miss)
+                // Even index  → Perfect (tap đúng nhịp, delay = 0)
+                // Odd index   → Good (tap trễ, nằm giữa Perfect window và hit window)
+                if (noteIndex % 2 == 1)
+                {
+                    delay = (perfectWindow + hitWindow) * 0.5f;
+                }
+                // noteIndex % 2 == 0 → delay giữ nguyên 0f (Perfect)
+            }
+
+            if (songPosition < note.TargetTime + delay) continue;
+
+            float deltaSeconds = songPosition - note.TargetTime;
+            Judge(i, Mathf.Abs(deltaSeconds) <= perfectWindow ? Judgement.Perfect : Judgement.Good, deltaSeconds);
         }
     }
     
-    private void Despawn(int activeIndex)
+    private void Despawn(int activeIndex, Judgement grade)
     {
-        pool.Release(activeTiles[activeIndex]);
+        TileView tile = activeTiles[activeIndex];
         activeTiles.RemoveAt(activeIndex);
+
+        exitingTiles.Add(tile);
+        tile.PlayExit(grade);
     }
 
+    private void ReleaseFinishedExits()
+    {
+        for (int i = exitingTiles.Count - 1; i >= 0; i--)
+        {
+            if (exitingTiles[i].IsExiting) continue;
+
+            pool.Release(exitingTiles[i]);
+            exitingTiles.RemoveAt(i);
+        }
+    }
+    
     private void ReleaseAllTiles()
     {
         for (int i = activeTiles.Count - 1; i >= 0; i--)
             pool.Release(activeTiles[i]);
         activeTiles.Clear();
+
+        // A restart must not leave last run's tiles fading over the new chart.
+        for (int i = exitingTiles.Count - 1; i >= 0; i--)
+        {
+            exitingTiles[i].CancelExit();
+            pool.Release(exitingTiles[i]);
+        }
+        exitingTiles.Clear();
     }
 
     private void OnDrawGizmos()

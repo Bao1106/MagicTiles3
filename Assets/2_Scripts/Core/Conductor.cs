@@ -34,6 +34,7 @@ public class Conductor : MonoBehaviour
         /// </param>
         public void Play(AudioClip clip, float leadInSeconds)
         {
+            musicSource.Stop();
             musicSource.clip = clip;
 
             double now = AudioSettings.dspTime;
@@ -50,7 +51,6 @@ public class Conductor : MonoBehaviour
 
         public void Stop()
         {
-            musicSource.Stop();
             IsRunning = false;
         }
 

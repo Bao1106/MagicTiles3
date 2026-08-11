@@ -6,9 +6,9 @@ public static class GameEvents
     public static event Action GameStarted;
 
     /// <summary>
-    /// Final score best combo.
+    /// Final score, best combo, and whether the player cleared the whole chart.
     /// </summary>
-    public static event Action<int, int> GameOver;
+    public static event Action<int, int, bool> GameOver;
 
     public static event Action<int> ScoreChanged;
 
@@ -28,7 +28,7 @@ public static class GameEvents
     public static event Action<int> EmptyTap;
 
     public static void RaiseGameStarted() => GameStarted?.Invoke();
-    public static void RaiseGameOver(int finalScore, int bestCombo) => GameOver?.Invoke(finalScore, bestCombo);
+    public static void RaiseGameOver(int finalScore, int bestCombo, bool won) => GameOver?.Invoke(finalScore, bestCombo, won);
     public static void RaiseScoreChanged(int score) => ScoreChanged?.Invoke(score);
     public static void RaiseComboChanged(int combo) => ComboChanged?.Invoke(combo);
     public static void RaiseNoteJudged(in HitResult result) => NoteJudged?.Invoke(result);

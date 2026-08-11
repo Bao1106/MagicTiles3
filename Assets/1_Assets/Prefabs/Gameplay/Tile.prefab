@@ -99,3 +99,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   body: {fileID: 5430940676373183479}
+  palette: {fileID: 11400000, guid: 8da7c0748c72ecd47bd7677d7232f43d, type: 2}
+  hitPunch: 0.18
+  hitPunchDuration: 0.06
+  hitFadeDuration: 0.12
+  hitDissolveScale: 1.35
+  missFadeDuration: 0.3
