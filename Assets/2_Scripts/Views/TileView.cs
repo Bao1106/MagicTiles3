@@ -27,6 +27,13 @@ public class TileView : MonoBehaviour
     [Header("Miss exit")]
     [SerializeField] private float missFadeDuration = 0.30f;
 
+    [Header("Speed-up tile")]
+    [Tooltip("A falling tile is read peripherally, so a special one needs a hue change rather " +
+             "than a shade — a darker or lighter version of the same colour does not register " +
+             "in the half second the player has.")]
+    [ColorUsage(true, true)]
+    [SerializeField] private Color speedUpColor = new Color(0.25f, 1f, 0.55f);
+
     /// <summary>Index into NoteController's NoteData array. Set on spawn.</summary>
     public int NoteIndex { get; set; }
 
@@ -57,6 +64,12 @@ public class TileView : MonoBehaviour
         IsExiting = false;
         body.color = baseColor;
         transform.localScale = baseScale;
+    }
+
+    /// <summary>Call after ResetVisual — that restores the normal colour this may override.</summary>
+    public void SetKind(NoteKind kind)
+    {
+        body.color = kind == NoteKind.SpeedUp ? speedUpColor : baseColor;
     }
 
     public void SetSize(float width, float height)

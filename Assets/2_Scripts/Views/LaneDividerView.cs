@@ -1,7 +1,5 @@
 using UnityEngine;
-// The asset puts the ProceduralImage type inside a namespace of the same name, so an
-// unaliased `using` makes every mention of it ambiguous with the namespace.
-using ProceduralImage = UnityEngine.UI.ProceduralImage.ProceduralImage;
+using UnityEngine.UI.ProceduralImage;
 
 /// <summary>
 /// Draws the vertical lane separators.

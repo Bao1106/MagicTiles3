@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class InputController : MonoBehaviour
 {
@@ -12,6 +15,24 @@ public class InputController : MonoBehaviour
              "so all three sets of feedback show up in one run. Turn off for a clean demo video.")]
     [SerializeField] private bool cycleJudgements = true;
 
+    [SerializeField] private Button btnAuto;
+    [SerializeField] private TMP_Text txtAuto;
+
+    private void Start()
+    {
+        SetTextAuto();
+        btnAuto.onClick.AddListener(() =>
+        {
+            autoplay = !autoplay;
+            SetTextAuto();
+        });
+    }
+
+    private void SetTextAuto()
+    {
+        txtAuto.text = autoplay ? "ON" : "OFF";
+    }
+    
     private void Update()
     {
         if (autoplay)

@@ -16,3 +16,11 @@ public enum Judgement
     Good,
     Miss
 }
+
+public enum NoteKind
+{
+    Normal,
+
+    /// <summary>Hitting it permanently raises the fall speed for every note after it.</summary>
+    SpeedUp
+}

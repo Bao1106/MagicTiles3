@@ -32,7 +32,26 @@ public class NoteController : MonoBehaviour
     [Tooltip("Optional visual for the hit line. NoteController positions it from hitLineViewportY " +
              "so the graphic can never drift away from where judgement actually happens.")]
     [SerializeField] private Transform hitLineVisual;
-    
+
+    [Header("Speed-up tiles")]
+    [Tooltip("Notes before this index are always normal. The player needs a few plain taps " +
+             "before a tile starts changing the rules.")]
+    [SerializeField, Min(0)] private int firstSpeedTileIndex = 8;
+
+    [Tooltip("Every Nth note after that one is a speed-up tile. A fixed interval rather than a " +
+             "roll, so the chart stays identical run to run like the rest of the generator.")]
+    [SerializeField, Min(2)] private int speedTileInterval = 16;
+
+    [Tooltip("Added to the fall-speed multiplier on each speed tile hit. Permanent for the run: " +
+             "the generated chart is otherwise flat for 87 seconds, and this is what gives it a " +
+             "curve without touching the music.")]
+    [SerializeField] private float speedStep = 0.15f;
+
+    [Tooltip("Ceiling on the multiplier. At 2.0 the approach time halves to 0.75 s, which is " +
+             "still above the ~0.4 s it takes to choose between four lanes.")]
+    [SerializeField] private float speedMax = 2f;
+
+
     private readonly List<TileView> activeTiles = new List<TileView>(32);
     // Tiles that have been judged and are playing their exit animation. They are no longer
     // moved, but must not return to the pool until the animation finishes.
@@ -45,15 +64,23 @@ public class NoteController : MonoBehaviour
 
     private float hitLineY;
     private float spawnY;
-    private float fallSpeed;      // world units per second, derived from ApproachTime
     private float approachTime;
+    private float speedMultiplier = 1f;
     private float laneWidthWorld;
     private float tileHeight;
 
     private int cachedScreenWidth;
     private int cachedScreenHeight;
 
+    /// <summary>Tile width as a fraction of its lane, leaving a visible gutter between lanes.</summary>
+    private const float TileWidthFraction = 0.88f;
+
     public int LaneCount => laneCount;
+
+    /// <summary>Approach time after speed tiles. Shorter means the tile has less screen to cross.</summary>
+    private float CurrentApproach => approachTime / speedMultiplier;
+
+    private float CurrentFallSpeed => (spawnY - hitLineY) / CurrentApproach;
 
     private void Awake()
     {
@@ -106,8 +133,6 @@ public class NoteController : MonoBehaviour
         cachedScreenWidth = Screen.width;
         cachedScreenHeight = Screen.height;
 
-        if (approachTime > 0f) fallSpeed = (spawnY - hitLineY) / approachTime;
-        
         if (hitLineVisual != null)
         {
             Vector3 p = hitLineVisual.position;
@@ -122,7 +147,7 @@ public class NoteController : MonoBehaviour
     public void BuildChart(SongData song)
     {
         approachTime = song.ApproachTime;
-        fallSpeed = (spawnY - hitLineY) / approachTime;
+        speedMultiplier = 1f;
 
         float interval = 60f / song.Bpm / song.Subdivision;
         float chartStart = song.ChartStartTime;
@@ -142,6 +167,10 @@ public class NoteController : MonoBehaviour
             notes[i].TargetTime = chartStart + i * interval;
             notes[i].Lane = lane;
             notes[i].Judged = false;
+            notes[i].Kind = i >= firstSpeedTileIndex &&
+                            (i - firstSpeedTileIndex) % speedTileInterval == 0
+                ? NoteKind.SpeedUp
+                : NoteKind.Normal;
         }
 
         nextSpawnIndex = 0;
@@ -168,13 +197,20 @@ public class NoteController : MonoBehaviour
         // approachTime IS the lead time — a tile spawns exactly when it needs to start
         // falling to reach the hit line on its note time. Change the feel, spawning follows.
         while (nextSpawnIndex < notes.Length &&
-               notes[nextSpawnIndex].TargetTime - songPosition <= approachTime)
+               notes[nextSpawnIndex].TargetTime - songPosition <= CurrentApproach)
         {
+            ref NoteData note = ref notes[nextSpawnIndex];
+
+            // Locked in now, not read live: a speed tile hit while this one is mid-flight must
+            // not change the trajectory the player is already reading.
+            note.FallSpeed = CurrentFallSpeed;
+
             TileView tile = pool.Get();
             tile.ResetVisual();
+            tile.SetKind(note.Kind);
             tile.NoteIndex = nextSpawnIndex;
-            tile.SetSize(laneWidthWorld * 0.88f, tileHeight);
-            tile.SetPosition(laneCenterX[notes[nextSpawnIndex].Lane], spawnY);
+            tile.SetSize(laneWidthWorld * TileWidthFraction, tileHeight);
+            tile.SetPosition(laneCenterX[note.Lane], spawnY);
             activeTiles.Add(tile);
             nextSpawnIndex++;
         }
@@ -185,6 +221,9 @@ public class NoteController : MonoBehaviour
         TileView tile = activeTiles[activeIndex];
         ref NoteData note = ref notes[tile.NoteIndex];
         note.Judged = true;
+
+        if (note.Kind == NoteKind.SpeedUp && grade != Judgement.Miss)
+            speedMultiplier = Mathf.Min(speedMultiplier + speedStep, speedMax);
 
         var result = new HitResult(grade, note.Lane, tile.transform.position, deltaSeconds);
         GameEvents.RaiseNoteJudged(in result);
@@ -200,7 +239,7 @@ public class NoteController : MonoBehaviour
             ref NoteData note = ref notes[tile.NoteIndex];
 
             // Position is a pure function of song time — nothing accumulates, nothing drifts.
-            float y = hitLineY + (note.TargetTime - songPosition) * fallSpeed;
+            float y = hitLineY + (note.TargetTime - songPosition) * note.FallSpeed;
             tile.SetPosition(laneCenterX[note.Lane], y);
 
             if (!note.Judged && songPosition - note.TargetTime > hitWindow)

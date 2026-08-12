@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
@@ -31,12 +32,22 @@ public class GameController : MonoBehaviour
         // vSync overrides targetFrameRate. Leave it on and Android silently caps at 30.
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 60;
+
+        // Nothing is live until the start tile is tapped. state defaults to Menu, and with no
+        // chart built NoteController idles on its own.
+        inputController.enabled = false;
     }
 
     private void OnEnable() => GameEvents.NoteJudged += HandleNoteJudged;
     private void OnDisable() => GameEvents.NoteJudged -= HandleNoteJudged;
 
-    private void Start() => StartGame();
+    private void Start()
+    {
+        // Zero the HUD before the player taps start, or it shows whatever the scene was saved
+        // with. Start, not Awake: views subscribe in OnEnable, which has all run by now.
+        GameEvents.RaiseScoreChanged(score.Score);
+        GameEvents.RaiseComboChanged(score.Combo);
+    }
 
     private void Update()
     {
@@ -46,13 +57,23 @@ public class GameController : MonoBehaviour
             EndGame(won: true);
     }
 
-    /// <summary>Wired to the result panel's Retry button.</summary>
+    public void QuitGame() => Application.Quit();
+
     public void RestartGame() => StartGame();
-
-    private void StartGame()
+    
+    /// <summary>
+    /// Wired to the start tile and to the result panel's Retry button — a retry is just a start.
+    /// </summary>
+    public void StartGame(CanvasGroup cvg = null)
     {
-        StopAllCoroutines();          // a queued result announcement must not fire into the new run
+        // a queued result announcement must not fire into the new run
+        StopAllCoroutines();          
 
+        cvg?.DOFade(0f, 0.3f).SetEase(Ease.Linear).OnComplete(() => 
+        {
+            cvg.gameObject.SetActive(false);
+        });
+        
         score.Reset();
         state = GameState.Playing;
 
