@@ -14,7 +14,28 @@
     /// so the very tap that reaches a milestone already earns the new rate — the reward
     /// lands on the same beat as the celebration.
     /// </summary>
-    public int Multiplier => Combo >= 50 ? 4 : Combo >= 25 ? 3 : Combo >= 10 ? 2 : 1;
+    /// <summary>
+    /// Combo values that step the multiplier. Public so audio escalation lands on the exact tap
+    /// that changes the rate, instead of keeping a second copy of the thresholds.
+    /// </summary>
+    public static readonly int[] Milestones = { 10, 25, 50 };
+
+    public static bool IsMilestone(int combo) => System.Array.IndexOf(Milestones, combo) >= 0;
+
+    /// <summary>
+    /// Step multiplier: x2 at 10, x3 at 25, x4 at 50. Applied after the combo increments, so the
+    /// very tap that reaches a milestone already earns the new rate — the reward lands on the
+    /// same beat as the celebration.
+    /// </summary>
+    public int Multiplier
+    {
+        get
+        {
+            int m = 1;
+            foreach (int t in Milestones) if (Combo >= t) m++;
+            return m;
+        }
+    }
 
     public void Reset()
     {

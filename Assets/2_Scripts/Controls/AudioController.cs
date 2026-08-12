@@ -1,14 +1,22 @@
 ﻿using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.Serialization;
 
 public class AudioController : MonoBehaviour
 {
     [Header("Sources")]
+    [Tooltip("Per-hit sounds. Its pitch rides the combo, so nothing that must stay in tune " +
+             "may play through it.")]
     [SerializeField] private AudioSource sfxSource;
 
+    [Tooltip("Fixed-pitch punctuation: milestone, game over, victory. Pitch belongs to the " +
+             "source, so a stinger sharing sfxSource would be bent 40% sharp at combo 50.")]
+    [SerializeField] private AudioSource sfxStingerSource;
+    
     [Header("Clips")]
     [SerializeField] private AudioClip hitClip;
     [SerializeField] private AudioClip missClip;
+    [SerializeField] private AudioClip milestoneClip;
     [SerializeField] private AudioClip gameOverClip;
     [SerializeField] private AudioClip victoryClip;
 
@@ -50,6 +58,11 @@ public class AudioController : MonoBehaviour
         }
 
         combo++;
+
+        // Layered, not replaced: the hit still confirms the tap, the stinger marks the rate
+        // change. Swapping one for the other would drop the confirmation on the loudest beat.
+        if (ScoreModel.IsMilestone(combo)) sfxStingerSource.PlayOneShot(milestoneClip);
+
         sfxSource.pitch = 1f + Mathf.Min(combo, pitchCap) * pitchStep;
         sfxSource.PlayOneShot(hitClip);
     }
@@ -66,7 +79,6 @@ public class AudioController : MonoBehaviour
         // The lowpass sits on the Music group only, so the music goes underwater while this
         // stinger stays crisp.
         muffledSnapshot?.TransitionTo(snapshotFade);
-        sfxSource.pitch = 1f;
-        sfxSource.PlayOneShot(won ? victoryClip : gameOverClip);
+        sfxStingerSource.PlayOneShot(won ? victoryClip : gameOverClip);
     }
 }
