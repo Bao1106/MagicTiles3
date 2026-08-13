@@ -78,6 +78,8 @@ public class GameController : MonoBehaviour
         state = GameState.Playing;
 
         noteController.BuildChart(song);
+        // Autoplay is a demo switch, not run state — a retry starts under the player's own hands.
+        inputController.SetAutoplay(false);
         inputController.enabled = true;
         conductor.Play(song.Clip, leadInSeconds);
 
