@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: FX_Particles
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 1024
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    - serializedVersion: 3
+      m_BuildTarget: Android
+      m_MaxTextureSize: 1024
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: 50
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 1
+      m_IgnorePlatformSupport: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 573520235e3ae4b35b21bc456d106b03, type: 3}
+    - {fileID: 2800000, guid: 908310c08a46743f799de5899ca12340, type: 3}
+    - {fileID: 2800000, guid: 109806c5b83804e5e9258c74d3de2b9b, type: 3}
+    - {fileID: 2800000, guid: bd439a61432c540d49404d8e96a0cba1, type: 3}
+    - {fileID: 2800000, guid: 74f9b0a62cc3449da8af030a4bb5865c, type: 3}
+    - {fileID: 2800000, guid: 8ff74bf123f7a431ab57f2a8e5e39724, type: 3}
+    - {fileID: 2800000, guid: e7342d25632544da3b764476a838c5d7, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys:
+    - 908310c08a46743f799de5899ca12340: 21300000
+    - bd439a61432c540d49404d8e96a0cba1: 21300000
+    - 8ff74bf123f7a431ab57f2a8e5e39724: 21300000
+    - 573520235e3ae4b35b21bc456d106b03: 21300000
+    - e7342d25632544da3b764476a838c5d7: 21300000
+    - 109806c5b83804e5e9258c74d3de2b9b: 21300000
+    - 74f9b0a62cc3449da8af030a4bb5865c: 21300000
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 908310c08a46743f799de5899ca12340, type: 3}
+  - {fileID: 21300000, guid: bd439a61432c540d49404d8e96a0cba1, type: 3}
+  - {fileID: 21300000, guid: 8ff74bf123f7a431ab57f2a8e5e39724, type: 3}
+  - {fileID: 21300000, guid: 573520235e3ae4b35b21bc456d106b03, type: 3}
+  - {fileID: 21300000, guid: e7342d25632544da3b764476a838c5d7, type: 3}
+  - {fileID: 21300000, guid: 109806c5b83804e5e9258c74d3de2b9b, type: 3}
+  - {fileID: 21300000, guid: 74f9b0a62cc3449da8af030a4bb5865c, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - fx_circle_line2
+  - note_long_dot_active
+  - top_tile_short
+  - effect_sunray 1
+  - trail
+  - hud_light_line
+  - StyledConfetti
+  m_RenderDataMap: {}
+  m_Tag: FX_Particles
+  m_IsVariant: 0
