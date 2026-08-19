@@ -9,7 +9,6 @@ public class Conductor : MonoBehaviour
         [SerializeField] private float latencyOffset = 0f;
 
         private double dspSongStart;
-        private double lastDspTime;
         private double smoothedDspTime;
         private double maxInterpolation;
 
@@ -39,7 +38,6 @@ public class Conductor : MonoBehaviour
 
             double now = AudioSettings.dspTime;
             dspSongStart = now + leadInSeconds;
-            lastDspTime = now;
             smoothedDspTime = now;
             SongPosition = (float)(now - dspSongStart) - latencyOffset;
 
@@ -60,20 +58,19 @@ public class Conductor : MonoBehaviour
 
             double dsp = AudioSettings.dspTime;
 
-            if (dsp > lastDspTime)
-            {
-                // Audio clock ticked — snap to truth.
-                lastDspTime = dsp;
-                smoothedDspTime = dsp;
-            }
-            else
-            {
-                // Same DSP block as last frame. Interpolate so tiles keep moving, but never
-                // run further ahead than one block, or the next snap would jump backwards.
-                smoothedDspTime = System.Math.Min(
-                    smoothedDspTime + Time.unscaledDeltaTime,
-                    lastDspTime + maxInterpolation);
-            }
+            // Advance by real elapsed time every frame, always. The audio clock stays the
+            // authority, but it only moves once per DSP block — 21.3 ms at this project's
+            // 1024-sample buffer, which is LONGER than a 16.7 ms frame. Snapping onto it
+            // whenever it ticked made song time lurch 4.7 ms one frame and 21.3 ms the next
+            // while frames were a steady 16.7. Tile Y is a pure function of song time, so the
+            // tiles juddered at a locked 60 FPS: the frame counter was fine, the motion wasn't.
+            smoothedDspTime += Time.unscaledDeltaTime;
+
+            // Clamp, never assign. dspTime reports the start of the block being processed, so
+            // true song time is somewhere in [dsp, dsp + block]. Staying inside that window
+            // corrects real drift without throwing away a frame of motion on every tick.
+            if (smoothedDspTime < dsp) smoothedDspTime = dsp;
+            else if (smoothedDspTime > dsp + maxInterpolation) smoothedDspTime = dsp + maxInterpolation;
 
             SongPosition = (float)(smoothedDspTime - dspSongStart) - latencyOffset;
         }

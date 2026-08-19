@@ -67,8 +67,11 @@ public class GameController : MonoBehaviour
     public void StartGame(CanvasGroup cvg = null)
     {
         // a queued result announcement must not fire into the new run
-        StopAllCoroutines();          
+        StopAllCoroutines();
 
+        // cvg is the start button's own CanvasGroup, passed from its onClick — that is what
+        // hides it. Null when the result panel's Retry calls in, which is correct: that panel
+        // hides itself on GameStarted.
         cvg?.DOFade(0f, 0.3f).SetEase(Ease.Linear).OnComplete(() => 
         {
             cvg.gameObject.SetActive(false);

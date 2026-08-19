@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -18,6 +19,11 @@ public class InputController : MonoBehaviour
 
     [SerializeField] private Button btnAuto;
     [SerializeField] private TMP_Text txtAuto;
+
+    // Reused across taps: RaycastAll fills a caller-owned list, and a fresh list plus a fresh
+    // PointerEventData on every tap is garbage twice a second for the whole song.
+    private readonly List<RaycastResult> uiHits = new List<RaycastResult>(8);
+    private PointerEventData pointerData;
 
     // Awake, not Start: GameController disables this component in its own Awake, and Unity defers
     // Start until a component is first enabled. On Start the AUTO button would be wired only once
@@ -64,11 +70,11 @@ public class InputController : MonoBehaviour
             for (int i = 0; i < touchCount; i++)
             {
                 Touch touch = Input.GetTouch(i);
-                if (touch.phase == TouchPhase.Began && !OverUI(touch.fingerId))
+                if (touch.phase == TouchPhase.Began && !OverInteractiveUI(touch.position))
                     JudgeAtScreenX(touch.position.x);
             }
         }
-        else if (Input.GetMouseButtonDown(0) && !OverUI(PointerInputModule.kMouseLeftId))
+        else if (Input.GetMouseButtonDown(0) && !OverInteractiveUI(Input.mousePosition))
         {
             // else, not a second if: on device Unity synthesises mouse events from touch,
             // which would judge the same tap twice.
@@ -77,14 +83,37 @@ public class InputController : MonoBehaviour
     }
 
     /// <summary>
+    /// True only when the tap landed on something the player can actually press.
+    ///
     /// A lane is not an object — JudgeAtScreenX is pure screen-width maths, so the strip under
     /// every UI button is live gameplay surface. Legacy Input polls the OS directly and never
-    /// sees the GraphicRaycaster, so a tap on a button fires onClick AND judges its lane unless
-    /// the UI is excluded here. Per pointer id: the no-argument overload only tracks the last
-    /// pointer, which is wrong the moment two thumbs are down.
+    /// sees the GraphicRaycaster, so a tap on a button would fire onClick AND judge its lane
+    /// unless the UI is excluded here.
+    ///
+    /// NOT EventSystem.IsPointerOverGameObject. That answers a different question — "is any
+    /// raycast-target graphic under the pointer" — and this scene has a full-screen decorative
+    /// Background with Raycast Target left on, under a canvas that carries a GraphicRaycaster.
+    /// It therefore returns true on every pixel of the screen and swallows every single tap:
+    /// the game becomes unplayable by hand while autoplay, which never reads Input, looks fine.
+    /// Asking for a Selectable instead means decorative art can never gate gameplay input.
     /// </summary>
-    private static bool OverUI(int pointerId) =>
-        EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(pointerId);
+    private bool OverInteractiveUI(Vector2 screenPosition)
+    {
+        EventSystem events = EventSystem.current;
+        if (events == null) return false;
+
+        pointerData ??= new PointerEventData(events);
+        pointerData.position = screenPosition;
+
+        uiHits.Clear();
+        events.RaycastAll(pointerData, uiHits);
+
+        for (int i = 0; i < uiHits.Count; i++)
+            if (uiHits[i].gameObject.GetComponentInParent<Selectable>() != null)
+                return true;
+
+        return false;
+    }
 
     private void JudgeAtScreenX(float screenX)
     {

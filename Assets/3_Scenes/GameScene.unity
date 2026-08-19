@@ -687,8 +687,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   noteController: {fileID: 470373014}
-  autoplay: 1
-  cycleJudgements: 1
+  autoplay: 0
+  cycleJudgements: 0
   btnAuto: {fileID: 577338693}
   txtAuto: {fileID: 1700280336}
 --- !u!1 &226510199
@@ -6259,6 +6259,7 @@ MonoBehaviour:
   conductor: {fileID: 1314242970}
   noteController: {fileID: 470373014}
   inputController: {fileID: 165187032}
+  startButton: {fileID: 0}
   leadInSeconds: 0.5
   lossResultDelay: 1
   winResultDelay: 0.6

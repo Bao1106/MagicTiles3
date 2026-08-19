@@ -9,11 +9,22 @@ public class GameResultView : MonoBehaviour
     [SerializeField] private TMP_Text titleText;
     [SerializeField] private TMP_Text finalScoreText;
     [SerializeField] private TMP_Text bestComboText;
+
+    [Tooltip("The Perfect tally. perfectCount was already being counted for the star rating — " +
+             "without this field the panel shows whatever number the scene was saved with, " +
+             "which reads as a mock-up rather than a result.")]
+    [SerializeField] private TMP_Text perfectCountText;
+
+    [Tooltip("The small badge above the title. It said 'Song completed' on a loss too.")]
+    [SerializeField] private TMP_Text badgeText;
+
     [SerializeField] private GameObject[] stars;
 
     [Header("Copy")]
     [SerializeField] private string winTitle = "SONG CLEAR!";
     [SerializeField] private string loseTitle = "GAME OVER";
+    [SerializeField] private string winBadge = "Song completed";
+    [SerializeField] private string loseBadge = "Run ended";
 
     [Header("Timing")]
     [SerializeField] private float backdropFade = 0.20f;
@@ -73,6 +84,11 @@ public class GameResultView : MonoBehaviour
     {
         titleText.SetText(won ? winTitle : loseTitle);
         bestComboText.SetText("x{0}", bestCombo);
+
+        // Null-checked because both are new fields: an unwired reference must not take the
+        // whole result panel down with a NullReferenceException mid-animation.
+        if (perfectCountText != null) perfectCountText.SetText("{0}", perfectCount);
+        if (badgeText != null) badgeText.SetText(won ? winBadge : loseBadge);
 
         int starCount = 0;
         if (won && judgedCount > 0)
